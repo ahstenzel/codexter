@@ -10,10 +10,14 @@
 #include <sstream>
 #include <deque>
 #include <stack>
+#include <limits>
 using namespace std;
 
 // Queue of input data from the user
 string inputQueue = "";
+
+// Output the state of the interpreter at every step
+bool debugOutput = false;
 
 /*
   itoc(i)
@@ -29,6 +33,18 @@ char itoc(int i) {
  */
 int ctoi(char c) {
   return int(c - '0');
+}
+
+/*
+  numDigits(i)
+ */
+int numDigits(int i) {
+  int digits = 0; 
+  do { 
+    i /= 10; 
+    digits++; 
+  } while ( i != 0);
+  return digits;
 }
 
 /*
@@ -60,14 +76,10 @@ string parseFile(string filename) {
     stringstream ss(line);
     while (ss >> chunk) {
       // Discard the rest of the line if theres a comment
-      if (chunk.find('#') != string::npos) {
-        break;
-      }
+      if (chunk.find('#') != string::npos) { break; }
 
       // Save the chunk if its a numeric string
-      if (isDigits(chunk)) {
-        fullString += chunk;
-      }
+      if (isDigits(chunk)) { fullString += chunk; }
     }
   }
   return fullString;
@@ -83,7 +95,7 @@ int getInput() {
   if (inputQueue.empty()) {
     string in = "";
     cout << "Reading input...";
-    cin >> in;
+    getline(cin, in);
     inputQueue += in;
   }
 
@@ -124,6 +136,70 @@ void write(string* input, int pos, int val) {
 }
 
 /*
+  outputState(input, output, pos, memory, flag)
+  Output the current state of the parser and
+  wait for user input before proceeding
+ */
+void outputState(const string& input, const string& output, const int& pos, const deque<int>& mem, const bool& flag) {
+  /* Draw instruction tape section */
+  // Top border
+  cout << "[TAPE]";
+  for (int i = 0; i < 44; ++i) { cout << "="; }
+  cout << endl;
+  // Tape values
+  int tapeStartPos = (pos < 25) ? 0 : pos - 25;
+  for (int i = tapeStartPos; i<int(input.size()); ++i) { cout << input[i]; }
+  cout << endl;
+  // Position marker
+  for (int i = 0; i < 50; ++i) {
+    if (i == pos) { cout << "^"; }
+    else if ((i + tapeStartPos) % 5 == 0) { cout << "|"; }
+    else { cout << " "; }
+  }
+  cout << endl;
+  // Indices
+  for (int i = 0; i < 50; ++i) {
+    if (i % 5 == 0) { 
+      int p = i + tapeStartPos;
+      cout << p; 
+      i += (numDigits(p) - 1);
+    }
+    else { cout << " "; }
+  }
+  cout << endl;
+  // Bottom border
+  for (int i = 0; i < 50; ++i) { cout << "="; }
+  cout << endl;
+
+  /* Draw stack section */
+  cout << "[STACK] = ";
+  string stack = "^{";
+  for (auto& it : mem) {
+    // Add elements to list
+    stack += to_string(it) + ", ";
+  }
+  if (stack.size() > 2) {
+    // Remove trailing commas
+    stack = stack.substr(0, stack.size() - 2);
+  }
+  stack += "}";
+  cout << stack << endl;
+
+  /* Draw flag state */
+  string state = (flag) ? "TRUE" : "FALSE";
+  cout << "[FLAG] = " << state << endl;
+
+  /* Draw output buffer state */
+  cout << "[OUT] = " << output << endl;
+
+  /* Wait for user */
+  cout << "Press enter to continue...";
+  cin.ignore(numeric_limits<streamsize>::max(), '\n');
+  cout << endl;
+  return;
+}
+
+/*
   parseString(input)
   Evaluates the numerical string digit by digit and
   produces an output.
@@ -141,6 +217,10 @@ string parseString(string input) {
 
   // Step through characters
   for (int i = 0; i < int(input.size()); ++i) {
+    // Debug state
+    if (debugOutput) { outputState(input, output, i, mem, flag); }
+    
+    // Evaluate char
     int a = 0, b = 0, c = 0, d = 0;
     switch (read(input, i)) {
       case 0:
@@ -160,12 +240,8 @@ string parseString(string input) {
         d = ((a * 100) + (b * 10) + c) % 256;
         if (d == 127 || d < 32) {
           d = getInput();
-          if (d < 0) {
-            i += 3;
-          }
-          else {
-            write(&input, i, d);
-          }
+          if (d < 0) { i += 3; }
+          else { write(&input, i, d); }
         }
         else {
           output.push_back(char(d));
@@ -185,9 +261,7 @@ string parseString(string input) {
         // JUMP
         if (flag) {
           size_t pos = input.find_first_of('3', size_t(i) + 1);
-          if (pos != input.npos) {
-            i = int(pos);
-          }
+          if (pos != input.npos) { i = int(pos); }
         }
         break;
       case 4:
@@ -196,9 +270,7 @@ string parseString(string input) {
         break;
       case 5:
         // POP
-        if (mem.empty()) {
-          i += 1;
-        }
+        if (mem.empty()) { i += 1; }
         else {
           write(&input, i, mem.front());
           mem.pop_front();
@@ -210,9 +282,7 @@ string parseString(string input) {
         break;
       case 7:
         // FLAG
-        if (read(input, i - 1) == 7) {
-          flag = !flag;
-        }
+        if (read(input, i - 1) == 7) { flag = !flag; }
         break;
       case 8:
         // ROTATE
@@ -271,17 +341,45 @@ string parseString(string input) {
   return output;
 }
 
+/*
+  printHelp()
+  Print a message showing flags and a brief overview
+  of instructions.
+ */
+void printHelp() {
+  cout << "Flags:" << endl;
+  cout << "  -h   Show this help menu" << endl;
+  cout << "  -d   Execute step-by-step with debug output" << endl;
+  cout << "" << endl;
+  cout << "Overview:" << endl;
+  cout << "  Codexter is an esolang that operates on strings of integers. Each non-flag" << endl;
+  cout << "  argument to this program will be treated as a seperate standalone string to" << endl;
+  cout << "  be parsed. Arguments can either be a literal number string or a path to a" << endl;
+  cout << "  .txt file. All numeric strings in a file will be concatenated and treated as" << endl;
+  cout << "  one large string. Any string containing non-digit characters is discarded." << endl;
+}
+
 int main(int argc, char* argv[]) {
   // Initialize
   cout << "+===========================+" << endl;
-  cout << "| CODEXTER Interpreter v1.0 |" << endl;
+  cout << "| CODEXTER Interpreter v1.1 |" << endl;
   cout << "+===========================+" << endl;
   deque<string> inputStrings;
 
   // Parse arguments into seperate strings
   for (int i = 1; i < argc; ++i) {
     string input(argv[i]);
-    if (input.find(".txt") != string::npos) {
+    if (input[0] == '-') {
+      // Argument is a flag
+      if (input == "-d") { 
+        debugOutput = true; 
+      }
+      if (input == "-h") {
+        printHelp();
+        return 0;
+      }
+    }
+    else if (input.find(".txt") != string::npos) {
       // Argument is a text file
       inputStrings.push_back(parseFile(input));
     }
