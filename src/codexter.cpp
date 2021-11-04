@@ -58,7 +58,7 @@ string parseFile(string filename) {
     while (ss >> chunk) {
       // Discard the rest of the line if theres a comment
       if (chunk[0] == '#') {
-        continue;
+        break;
       }
 
       // Save the chunk if its a numeric string
