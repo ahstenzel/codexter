@@ -252,6 +252,9 @@ string parseInput(string input) {
 
 int main(int argc, char* argv[]) {
   // Initialize
+  cout << "+===========================+" << endl;
+  cout << "| CODEXTER Interpreter v0.1 |" << endl;
+  cout << "+===========================+" << endl;
   deque<string> inputStrings;
 
   // Parse arguments into seperate strings
