@@ -12,6 +12,9 @@
 #include <stack>
 using namespace std;
 
+// Queue of input data from the user
+string inputQueue = "";
+
 /*
   itoc(i)
   Convert digit i to its corresponding character
@@ -29,11 +32,11 @@ int ctoi(char c) {
 }
 
 /*
-  isDigits(string)
+  isDigits(str)
   Return true if the string contains only digits
  */
-bool isDigits(string input) {
-  return (input.find_first_not_of("0123456789") == string::npos);
+bool isDigits(string str) {
+  return (str.find_first_not_of("0123456789") == string::npos);
 }
 
 /*
@@ -57,7 +60,7 @@ string parseFile(string filename) {
     stringstream ss(line);
     while (ss >> chunk) {
       // Discard the rest of the line if theres a comment
-      if (chunk[0] == '#') {
+      if (chunk.find('#') != string::npos) {
         break;
       }
 
@@ -71,34 +74,36 @@ string parseFile(string filename) {
 }
 
 /*
-  getInput(int&)
-  Get a single char from cin and save it in the
-  reference. Returns true if there was a value to
-  retrieve, or false if it was empty.
+  getInput()
+  Get a single digit from cin and return it,
+  or -1 if the input buffer is empty.
  */
-bool getInput(int* g) {
-  bool accept = false;
-  string input;
-  cout << "Enter a single digit: ";
-  do {
-    // Get input
-    input = "";
-    cin >> input;
+int getInput() {
+  // Get input
+  if (inputQueue.empty()) {
+    string in = "";
+    cout << "Reading input...";
+    cin >> in;
+    inputQueue += in;
+  }
 
-    // Error check
-    if (input.empty()) {
-      return false;
+  // Get the next valid char
+  bool valid = false;
+  int val = -1;
+  do {
+    // Get next char
+    string s = inputQueue.substr(0, 1);
+    inputQueue.erase(0, 1);
+
+    // Check if it's valid
+    if (isDigits(s)) {
+      val = ctoi(s[0]);
+      valid = true;
     }
-    else if (input.size() > 1 || !isDigits(input)) {
-      cout << "ERROR: Enter just a single digit: ";
-    }
-    else {
-      accept = true;
-    }
-  } while (!accept);
-  *g = ctoi(input[0]);
-  return true;
+  } while (!valid);
+  return val;
 }
+
 
 /*
   read(string, pos)
@@ -119,11 +124,11 @@ void write(string* input, int pos, int val) {
 }
 
 /*
-  parseInput(input)
+  parseString(input)
   Evaluates the numerical string digit by digit and
   produces an output.
  */
-string parseInput(string input) {
+string parseString(string input) {
   // Error checking
   if (!isDigits(input)) {
     return "ERROR: String contains non-numeric characters!";
@@ -132,14 +137,12 @@ string parseInput(string input) {
   // Initialize
   deque<int> mem;
   bool flag = false;
-  string output;
-  int size = int(input.size());
-  int a = 0, b = 0, c = 0, d = 0;
+  string output = "";
 
   // Step through characters
-  for (int i = 0; i < size; ++i) {
-    int c = read(input, i);
-    switch (c) {
+  for (int i = 0; i < int(input.size()); ++i) {
+    int a = 0, b = 0, c = 0, d = 0;
+    switch (read(input, i)) {
       case 0:
         // NOP
         break;
@@ -156,11 +159,12 @@ string parseInput(string input) {
         c = read(input, i + 3);
         d = ((a * 100) + (b * 10) + c) % 256;
         if (d == 127 || d < 32) {
-          if (getInput(&d)) {
-            write(&input, i, d);
+          d = getInput();
+          if (d < 0) {
+            i += 3;
           }
           else {
-            i += 3;
+            write(&input, i, d);
           }
         }
         else {
@@ -218,28 +222,45 @@ string parseInput(string input) {
       case 9:
         // LOOP
         if (flag) {
+          // If you're at the end of a string of 9s,
           if (read(input, i + 1) != 9) {
+            // Count the length of the string
             int startCount = 1;
             while (read(input, i - startCount) == 9) {
               startCount++;
             }
+            // Find the previous string of 9s
             bool newString = false;
             int endCount = 0;
             for (int j = i - startCount; j >= 0; --j) {
               if (read(input, j) == 9) {
+                // Counting the string length
                 newString = true;
                 endCount++;
               }
               else if (newString) {
+                // Reached the end of the string
                 if (endCount == startCount) {
+                  // Earlier string is the same as the original string, so
+                  // jump execeution to the end of the earlier string
                   i = j + endCount;
                   break;
                 }
                 else if (endCount > startCount) {
+                  // Earlier string is longer than the original string, so
+                  // carry on execution
                   break;
+                }
+                else {
+                  // Earlier string is shorter than the original string, so
+                  // keep looking for another string
+                  endCount = 0;
+                  newString = false;
                 }
               }
             }
+            // Reached the beginning of the input and didn't find an
+            // equal length string of 9s, carry on execution
           }
         }
         break;
@@ -253,7 +274,7 @@ string parseInput(string input) {
 int main(int argc, char* argv[]) {
   // Initialize
   cout << "+===========================+" << endl;
-  cout << "| CODEXTER Interpreter v0.1 |" << endl;
+  cout << "| CODEXTER Interpreter v1.0 |" << endl;
   cout << "+===========================+" << endl;
   deque<string> inputStrings;
 
@@ -273,7 +294,7 @@ int main(int argc, char* argv[]) {
   // Evaluate each string
   for (const string& str : inputStrings) {
     cout << ">> " << str << endl;
-    cout << parseInput(str) << endl;
+    cout << parseString(str) << endl;
   }
 
   return 0;
