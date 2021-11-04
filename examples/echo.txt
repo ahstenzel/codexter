@@ -1,0 +1,4 @@
+#Ask for a digit, then echo it back
+2014		# Receive an input and push it to the stack
+664654		# Print the number at the top of the stack
+9661555047795
