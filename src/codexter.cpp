@@ -1,5 +1,5 @@
 /*
-  codexter.c
+  codexter.cpp
   Interpreter for the codexter esolang created by June Stenzel (https://github.com/jsstenzel)
   Implementation by Alex Stenzel (https://github.com/ahstenzel)
  */
@@ -342,15 +342,40 @@ string parseString(string input) {
 }
 
 /*
+  printHeader()
+  Print the interpreter header greeting.
+ */
+void printHeader() {
+  string str = "CODEXTER Interpreter";
+  #ifdef INTERPRETER_VERSION
+  str += " v";
+  str += INTERPRETER_VERSION;
+  #endif
+
+  cout << "+" << string(str.length() + 2,'=') << "+" << endl;
+  cout << "| " << str << " |" << endl;
+  cout << "+" << string(str.length() + 2,'=') << "+" << endl << endl;
+}
+
+/*
+  printUsage()
+  Print the command format for invoking the interpreter.
+ */
+void printUsage() {
+  cout << "Usage: codexter [flags] <input file>" << endl;
+  cout << "Flags:" << endl;
+  cout << "  -h   Show this help menu" << endl;
+  cout << "  -d   Execute step-by-step with debug output" << endl;
+  cout << "  -v   Print interpreter version" << endl;
+}
+
+/*
   printHelp()
   Print a message showing flags and a brief overview
   of instructions.
  */
 void printHelp() {
-  cout << "Flags:" << endl;
-  cout << "  -h   Show this help menu" << endl;
-  cout << "  -d   Execute step-by-step with debug output" << endl;
-  cout << "" << endl;
+  printUsage();
   cout << "Overview:" << endl;
   cout << "  Codexter is an esolang that operates on strings of integers. Each non-flag" << endl;
   cout << "  argument to this program will be treated as a seperate standalone string to" << endl;
@@ -361,12 +386,13 @@ void printHelp() {
 
 int main(int argc, char* argv[]) {
   // Initialize
-  cout << "+===========================+" << endl;
-  cout << "| CODEXTER Interpreter v1.1 |" << endl;
-  cout << "+===========================+" << endl;
   deque<string> inputStrings;
 
   // Parse arguments into seperate strings
+  if (argc == 1) {
+    printUsage();
+    return 1;
+  }
   for (int i = 1; i < argc; ++i) {
     string input(argv[i]);
     if (input[0] == '-') {
@@ -374,9 +400,19 @@ int main(int argc, char* argv[]) {
       if (input == "-d") { 
         debugOutput = true; 
       }
-      if (input == "-h") {
+      else if (input == "-h") {
         printHelp();
         return 0;
+      }
+      else if (input == "-v") {
+        #ifdef INTERPRETER_VERSION
+        cout << INTERPRETER_VERSION << endl;
+        #endif
+        return 0;
+      }
+      else {
+        printUsage();
+        return 1;
       }
     }
     else if (input.find(".txt") != string::npos) {
@@ -390,6 +426,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Evaluate each string
+  if (debugOutput) { printHeader(); }
   for (const string& str : inputStrings) {
     cout << ">> " << str << endl;
     cout << parseString(str) << endl;
