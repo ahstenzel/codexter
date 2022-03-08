@@ -302,7 +302,7 @@ string parseString(string input) {
             // Find the previous string of 9s
             bool newString = false;
             int endCount = 0;
-            for (int j = i - startCount; j >= 0; --j) {
+            for (int j = i - startCount; j >= -1; --j) {
               if (read(input, j) == 9) {
                 // Counting the string length
                 newString = true;
