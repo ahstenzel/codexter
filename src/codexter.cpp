@@ -146,13 +146,15 @@ void outputState(const string& input, const string& output, const int& pos, cons
   cout << "[TAPE]";
   for (int i = 0; i < 44; ++i) { cout << "="; }
   cout << endl;
-  // Tape values
+  // Tape values - these are stationary for the first 25 instructions, then scroll off to the left
   int tapeStartPos = (pos < 25) ? 0 : pos - 25;
   for (int i = tapeStartPos; i<int(input.size()); ++i) { cout << input[i]; }
   cout << endl;
-  // Position marker
+  // Position marker - carat moves to the right for the first 25 instructions, then is stationary
   for (int i = 0; i < 50; ++i) {
-    if (i == pos) { cout << "^"; }
+    //if (i == pos) { cout << "^"; } //this converts units incorrectly; i is relative to 0 on left margin, but pos is relative to tapeStartPos on left margin
+	if (i == pos and pos <= 25) { cout << "^"; }
+	else if (i == 25 and pos > 25) { cout << "^"; }
     else if ((i + tapeStartPos) % 5 == 0) { cout << "|"; }
     else { cout << " "; }
   }
