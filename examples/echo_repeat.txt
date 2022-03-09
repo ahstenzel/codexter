@@ -1,0 +1,17 @@
+Ask for a one digit input, echo it back, and repeat
+
+Take in an input
+2014
+
+Make the stack #^{x,5,5,3}
+99
+60154   #First time set this to 606x4, second time push x
+3       #On second time, break the loop here
+5       #Trash x here
+634
+654
+654     #Stack is now ^{5,5,3}
+30
+00000000000000000770
+99 
+

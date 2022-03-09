@@ -1,4 +1,9 @@
 # Ask for a digit, then echo it back
 2014          # Receive an input and push it to the stack
-664654        # Print the number at the top of the stack
-996615550477995
+664654        # Set the stack to ^{5,6,x}
+
+99  
+661  # First, set the 1 -> 2 to print next time
+555  # Set the 555 -> 56x
+0    # Space out to make sure there's no interference on the 7's
+7799 # Repeat the loop only once; next, the 2 will print 56x % 256 = 48+x, the ASCII char for x. "56x" then gets replaced by 000, and code finishes.
