@@ -152,17 +152,16 @@ void outputState(const string& input, const string& output, const int& pos, cons
   cout << endl;
   // Position marker - carat moves to the right for the first 25 instructions, then is stationary
   for (int i = 0; i < 50; ++i) {
-    //if (i == pos) { cout << "^"; } //this converts units incorrectly; i is relative to 0 on left margin, but pos is relative to tapeStartPos on left margin
-	if (i == pos and pos <= 25) { cout << "^"; }
-	else if (i == 25 and pos > 25) { cout << "^"; }
+	  if (i == pos && pos <= 25) { cout << "^"; }
+	  else if (i == 25 && pos > 25) { cout << "^"; }
     else if ((i + tapeStartPos) % 5 == 0) { cout << "|"; }
     else { cout << " "; }
   }
   cout << endl;
   // Indices
   for (int i = 0; i < 50; ++i) {
-    if (i % 5 == 0) { 
-      int p = i + tapeStartPos;
+    int p = i + tapeStartPos;
+    if (p % 5 == 0) { 
       cout << p; 
       i += (numDigits(p) - 1);
     }
