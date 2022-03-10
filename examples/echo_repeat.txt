@@ -1,17 +1,19 @@
-Ask for a one digit input, echo it back, and repeat
+***Ask for a one digit input, echo it back, and repeat
 
-Take in an input
-2014
+9999 This is the program loop
+Let's force FLAG=false, just for sanity: 3776377
 
-Make the stack #^{x,5,5,3}
-99
-60154   #First time set this to 606x4, second time push x
-3       #On second time, break the loop here
-5       #Trash x here
-634
-654
-654     #Stack is now ^{5,5,3}
-30
-00000000000000000770
-99 
+999 This is the loop for calling echo and then resetting the tape
 
+833
+20146646549966155507799 The original echo script, which is used to reset the tape
+8
+
+33 <- (This is so we can skip the echo function after cleaning the tape)
+20146646549966155507799
+
+077999
+33 and this is where we skip to to break the loop
+
+FLAG will still be true by the time we get to here, making it an infinite loop
+9999
